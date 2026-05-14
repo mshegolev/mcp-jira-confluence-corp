@@ -12,10 +12,11 @@ authors = [{name = "Mikhail Shegolev", email = "mshegolev@gmail.com"}]
 license = {text = "MIT"}
 
 dependencies = [
-    "atlassian>=3.41.0",
+    "atlassian-python-api>=3.41.0",
     "pydantic>=2.0",
     "requests>=2.28.0",
     "cryptography>=41.0.0",
+    "mcp>=1.0.0",
 ]
 
 [project.optional-dependencies]

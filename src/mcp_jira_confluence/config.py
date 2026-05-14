@@ -90,9 +90,14 @@ class JiraConfig:
         )
 
     def get_auth_dict(self) -> dict:
-        """Return auth dict for atlassian.Jira."""
+        """Return auth dict for atlassian.Jira.
+
+        For PAT (Personal Access Token) auth, atlassian-python-api expects 'token' parameter.
+        For Basic Auth, it expects 'username' + 'password' parameters.
+        """
         if self.personal_token:
-            return {"personal_token": self.personal_token}
+            # PAT auth uses Bearer token
+            return {"token": self.personal_token}
         elif self.token:
             return {"token": self.token}
         elif self.username:
@@ -122,9 +127,14 @@ class ConfluenceConfig:
         )
 
     def get_auth_dict(self) -> dict:
-        """Return auth dict for atlassian.Confluence."""
+        """Return auth dict for atlassian.Confluence.
+
+        For PAT (Personal Access Token) auth, atlassian-python-api expects 'token' parameter.
+        For Basic Auth, it expects 'username' + 'password' parameters.
+        """
         if self.personal_token:
-            return {"personal_token": self.personal_token}
+            # PAT auth uses Bearer token
+            return {"token": self.personal_token}
         elif self.token:
             return {"token": self.token}
         elif self.username:
