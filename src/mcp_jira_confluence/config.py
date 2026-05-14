@@ -1,9 +1,9 @@
-"""Configuration for Jira/Confluence MCP server with MTS proxy support.
+"""Configuration for Jira/Confluence MCP server with corporate proxy support.
 
-Supports both custom implementation and qa_assistant helpers:
-- ForkedFrom: /opt/develop/qa_assistant (ConfluenceHelper, JiraHelper)
-- ProxySupport: Automatic bypass for internal MTS domains
-- SSLVerify: Disabled by default for self-signed MTS certs
+The :class:`ProxyConfig` lets you list internal domains that should bypass any
+system proxy (HTTP_PROXY/HTTPS_PROXY). This is useful in corporate networks
+where an SSH tunnel for cloud APIs (e.g. Anthropic) would otherwise intercept
+on-prem Atlassian traffic.
 """
 
 import os
@@ -12,60 +12,57 @@ from typing import Optional
 from urllib.parse import urlparse
 
 
+def _parse_csv_env(name: str) -> list[str]:
+    """Parse a comma-separated environment variable into a list."""
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return []
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
 @dataclass
 class ProxyConfig:
-    """Proxy configuration for MTS corporate network."""
+    """Proxy configuration for corporate network environments.
 
-    # SSH tunnel proxy (for Anthropic API and external HTTPS)
-    socks5_host: str = "127.0.0.1"
-    socks5_port: int = 11111
-    http_tunnel_host: str = "127.0.0.1"
-    http_tunnel_port: int = 11112
+    Attributes:
+        bypass_domains: List of domain patterns that should bypass any system
+            proxy. Supports exact match (``confluence.example.com``) and
+            single-level wildcards (``*.example.com``). Loaded from the
+            ``MCP_BYPASS_DOMAINS`` environment variable by default.
+        verify_ssl: Whether to verify SSL certificates. Set to ``False`` for
+            self-signed corporate certificates.
+    """
 
-    # Internal MTS domains that should BYPASS proxy
     bypass_domains: list[str] = field(
-        default_factory=lambda: [
-            "*.mts.ru",
-            "*.services.mts.ru",
-            "confluence.mts.ru",
-            "jira.mts.ru",
-            "gitlab.services.mts.ru",
-            "sregistry.mts.ru",
-            "allure.services.mts.ru",
-            "sonarqube.services.mts.ru",
-        ]
+        default_factory=lambda: _parse_csv_env("MCP_BYPASS_DOMAINS")
     )
-
-    # SSL verification (set to False for self-signed MTS certs)
     verify_ssl: bool = False
 
     def should_bypass(self, url: str) -> bool:
-        """Check if URL should bypass proxy (internal MTS domain)."""
+        """Return True if the URL host matches any configured bypass pattern."""
         parsed = urlparse(url)
         hostname = parsed.hostname or ""
 
         for domain in self.bypass_domains:
             if domain.startswith("*."):
-                # Wildcard domain like *.mts.ru
-                suffix = domain[2:]  # Remove *.
+                suffix = domain[2:]
                 if hostname.endswith(suffix):
                     return True
-            else:
-                # Exact match
-                if hostname == domain:
-                    return True
+            elif hostname == domain:
+                return True
 
         return False
 
     def get_env_dict(self) -> dict[str, str]:
-        """Return environment variables dict for requests/urllib."""
+        """Return environment variables that disable system proxies for requests."""
+        no_proxy = ",".join(self.bypass_domains) if self.bypass_domains else ""
         return {
             "HTTP_PROXY": "",
             "HTTPS_PROXY": "",
             "http_proxy": "",
             "https_proxy": "",
-            "NO_PROXY": ",".join(self.bypass_domains),
-            "no_proxy": ",".join(self.bypass_domains),
+            "NO_PROXY": no_proxy,
+            "no_proxy": no_proxy,
         }
 
 
@@ -78,32 +75,31 @@ class JiraConfig:
     token: Optional[str] = None
     personal_token: Optional[str] = None
 
-    # Load from environment if not provided
     @classmethod
     def from_env(cls) -> "JiraConfig":
-        """Load configuration from environment variables."""
+        """Load configuration from ``JIRA_*`` environment variables."""
         return cls(
-            url=os.getenv("JIRA_URL", "https://jira.mts.ru"),
+            url=os.getenv("JIRA_URL", ""),
             username=os.getenv("JIRA_USERNAME"),
             token=os.getenv("JIRA_TOKEN"),
             personal_token=os.getenv("JIRA_PERSONAL_TOKEN"),
         )
 
     def get_auth_dict(self) -> dict:
-        """Return auth dict for atlassian.Jira.
+        """Return the auth kwargs accepted by ``atlassian.Jira``.
 
-        For PAT (Personal Access Token) auth, atlassian-python-api expects 'token' parameter.
-        For Basic Auth, it expects 'username' + 'password' parameters.
+        Priority:
+            1. Basic Auth if a ``username`` is provided.
+            2. Bearer token from ``personal_token`` (PAT).
+            3. Bearer token from ``token``.
         """
-        if self.personal_token:
-            # PAT auth uses Bearer token
-            return {"token": self.personal_token}
-        elif self.token:
-            return {"token": self.token}
-        elif self.username:
+        if self.username:
             return {"username": self.username, "password": self.token}
-        else:
-            return {}
+        if self.personal_token:
+            return {"token": self.personal_token}
+        if self.token:
+            return {"token": self.token}
+        return {}
 
 
 @dataclass
@@ -115,29 +111,28 @@ class ConfluenceConfig:
     token: Optional[str] = None
     personal_token: Optional[str] = None
 
-    # Load from environment if not provided
     @classmethod
     def from_env(cls) -> "ConfluenceConfig":
-        """Load configuration from environment variables."""
+        """Load configuration from ``CONFLUENCE_*`` environment variables."""
         return cls(
-            url=os.getenv("CONFLUENCE_URL", "https://confluence.mts.ru"),
+            url=os.getenv("CONFLUENCE_URL", ""),
             username=os.getenv("CONFLUENCE_USERNAME"),
             token=os.getenv("CONFLUENCE_TOKEN"),
             personal_token=os.getenv("CONFLUENCE_PERSONAL_TOKEN"),
         )
 
     def get_auth_dict(self) -> dict:
-        """Return auth dict for atlassian.Confluence.
+        """Return the auth kwargs accepted by ``atlassian.Confluence``.
 
-        For PAT (Personal Access Token) auth, atlassian-python-api expects 'token' parameter.
-        For Basic Auth, it expects 'username' + 'password' parameters.
+        Priority:
+            1. Basic Auth if a ``username`` is provided.
+            2. Bearer token from ``personal_token`` (PAT).
+            3. Bearer token from ``token``.
         """
-        if self.personal_token:
-            # PAT auth uses Bearer token
-            return {"token": self.personal_token}
-        elif self.token:
-            return {"token": self.token}
-        elif self.username:
+        if self.username:
             return {"username": self.username, "password": self.token}
-        else:
-            return {}
+        if self.personal_token:
+            return {"token": self.personal_token}
+        if self.token:
+            return {"token": self.token}
+        return {}

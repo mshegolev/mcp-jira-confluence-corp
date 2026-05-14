@@ -1,22 +1,27 @@
-"""Unified client for Jira and Confluence with MTS proxy support."""
+"""Unified client for Jira and Confluence with corporate proxy support."""
 
 import os
 from typing import Any, Optional
 
-import requests
 from atlassian import Confluence, Jira
 
-from .config import ProxyConfig, JiraConfig, ConfluenceConfig
+from .config import ConfluenceConfig, JiraConfig, ProxyConfig
 
 
 class JiraConfluenceClient:
-    """
-    Unified client for Jira and Confluence APIs with MTS proxy support.
+    """Unified client for the Jira and Confluence REST APIs.
 
-    Features:
-    - Automatic proxy bypass for internal MTS domains
-    - Self-signed certificate handling
-    - Token and username/password auth
+    Designed for corporate networks where system proxies and self-signed
+    certificates interfere with API access. On construction the client clears
+    ``HTTP_PROXY``-style environment variables so the underlying ``requests``
+    session connects directly to the configured Atlassian hosts.
+
+    Args:
+        jira_config: Jira connection config. Loaded from environment if ``None``.
+        confluence_config: Confluence connection config. Loaded from environment
+            if ``None``.
+        proxy_config: Proxy bypass configuration. Defaults to reading
+            ``MCP_BYPASS_DOMAINS`` from the environment.
     """
 
     def __init__(
@@ -25,104 +30,89 @@ class JiraConfluenceClient:
         confluence_config: Optional[ConfluenceConfig] = None,
         proxy_config: Optional[ProxyConfig] = None,
     ):
-        """
-        Initialize Jira/Confluence client.
-
-        Args:
-            jira_config: Jira connection config (loaded from env if None)
-            confluence_config: Confluence connection config (loaded from env if None)
-            proxy_config: Proxy configuration (default: MTS proxy)
-        """
         self.jira_config = jira_config or JiraConfig.from_env()
         self.confluence_config = confluence_config or ConfluenceConfig.from_env()
         self.proxy_config = proxy_config or ProxyConfig()
 
-        # Clear global proxy env vars (they interfere with internal MTS domains)
         self._clear_proxy_env()
 
-        # Initialize clients
         self._jira: Optional[Jira] = None
         self._confluence: Optional[Confluence] = None
 
-    def _clear_proxy_env(self) -> None:
-        """Clear HTTP_PROXY env vars to avoid interfering with internal MTS domains."""
-        for var in [
+    @staticmethod
+    def _clear_proxy_env() -> None:
+        """Clear HTTP proxy environment variables.
+
+        Prevents global proxy settings (e.g. an SSH tunnel for a different
+        service) from intercepting traffic to internal Atlassian hosts.
+        """
+        for var in (
             "HTTP_PROXY",
             "HTTPS_PROXY",
             "http_proxy",
             "https_proxy",
             "ALL_PROXY",
             "all_proxy",
-        ]:
-            if var in os.environ:
-                del os.environ[var]
+        ):
+            os.environ.pop(var, None)
 
     @property
     def jira(self) -> Jira:
-        """Get or create Jira client."""
+        """Lazily construct and return the underlying ``atlassian.Jira`` client."""
         if self._jira is None:
-            auth = self.jira_config.get_auth_dict()
             self._jira = Jira(
                 url=self.jira_config.url,
                 verify_ssl=self.proxy_config.verify_ssl,
-                **auth,
+                **self.jira_config.get_auth_dict(),
             )
         return self._jira
 
     @property
     def confluence(self) -> Confluence:
-        """Get or create Confluence client."""
+        """Lazily construct and return the underlying ``atlassian.Confluence`` client."""
         if self._confluence is None:
-            auth = self.confluence_config.get_auth_dict()
             self._confluence = Confluence(
                 url=self.confluence_config.url,
                 verify_ssl=self.proxy_config.verify_ssl,
-                **auth,
+                **self.confluence_config.get_auth_dict(),
             )
         return self._confluence
 
+    # ------------------------------------------------------------------
     # Jira methods
+    # ------------------------------------------------------------------
     def get_issue(self, issue_key: str) -> dict[str, Any]:
-        """Get Jira issue by key."""
+        """Get a Jira issue by key."""
         return self.jira.issue(issue_key)
 
-    def get_issue_changelog(self, issue_key: str) -> list[dict]:
-        """Get issue changelog."""
-        issue = self.get_issue(issue_key)
-        return issue.get("changelog", {}).get("histories", [])
-
-    def search_issues(self, jql: str, limit: int = 50) -> list[dict]:
-        """Search issues using JQL."""
+    def search_issues(self, jql: str, limit: int = 50) -> dict[str, Any]:
+        """Search Jira issues using a JQL query."""
         return self.jira.jql(jql, limit=limit)
 
     def create_issue(self, fields: dict[str, Any]) -> dict[str, Any]:
-        """Create new issue."""
+        """Create a new Jira issue."""
         return self.jira.create_issue(fields=fields)
 
     def update_issue(self, issue_key: str, fields: dict[str, Any]) -> None:
-        """Update issue."""
+        """Update an existing Jira issue."""
         self.jira.update_issue(issue_key, fields=fields)
 
     def add_comment(self, issue_key: str, comment: str) -> dict[str, Any]:
-        """Add comment to issue."""
+        """Add a comment to a Jira issue."""
         return self.jira.add_comment(issue_key, comment)
 
+    # ------------------------------------------------------------------
     # Confluence methods
+    # ------------------------------------------------------------------
     def get_page(self, page_id: str, expand: str = "body.storage,version") -> dict[str, Any]:
-        """Get Confluence page by ID."""
+        """Get a Confluence page by ID."""
         return self.confluence.get_page_by_id(page_id, expand=expand)
 
     def get_page_by_title(
         self, title: str, space_key: str, expand: str = "body.storage,version"
     ) -> dict[str, Any]:
-        """Get Confluence page by title and space."""
-        return self.confluence.get_page_by_title(
-            space_key, title, expand=expand
-        )
-
-    def search_pages(self, query: str, limit: int = 10) -> list[dict]:
-        """Search Confluence pages."""
-        return self.confluence.search_pages_by_label(query, limit=limit)
+        """Get a Confluence page by title and space key."""
+        return self.confluence.get_page_by_title(space_key, title, expand=expand)
 
     def create_page(
         self,
@@ -131,7 +121,7 @@ class JiraConfluenceClient:
         body: str,
         parent_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        """Create Confluence page."""
+        """Create a new Confluence page in the given space."""
         return self.confluence.create_page(
             space=space_key,
             title=title,
@@ -144,20 +134,18 @@ class JiraConfluenceClient:
         page_id: str,
         title: str,
         body: str,
-        version_number: Optional[int] = None,
     ) -> dict[str, Any]:
-        """Update Confluence page."""
+        """Update an existing Confluence page."""
         return self.confluence.update_page(
             page_id=page_id,
             title=title,
             body=body,
-            version_number=version_number,
         )
 
     def add_page_label(self, page_id: str, label: str) -> None:
-        """Add label to page."""
+        """Add a label to a Confluence page."""
         self.confluence.set_page_label(page_id, label)
 
     def delete_page(self, page_id: str) -> None:
-        """Delete Confluence page."""
+        """Delete a Confluence page."""
         self.confluence.remove_page(page_id)

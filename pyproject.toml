@@ -5,17 +5,45 @@ build-backend = "hatchling.build"
 [project]
 name = "mcp-jira-confluence"
 version = "0.1.0"
-description = "MCP server for Jira and Confluence with built-in MTS proxy support"
+description = "MCP server for Jira and Confluence with built-in corporate proxy support and automatic domain bypass"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{name = "Mikhail Shegolev", email = "mshegolev@gmail.com"}]
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "jira",
+    "confluence",
+    "atlassian",
+    "proxy",
+    "corporate-network",
+    "ai-tools",
+    "claude",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Office/Business :: Groupware",
+    "Topic :: System :: Networking",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
 
 dependencies = [
     "atlassian-python-api>=3.41.0",
     "pydantic>=2.0",
     "requests>=2.28.0",
-    "cryptography>=41.0.0",
     "mcp>=1.0.0",
 ]
 
@@ -23,21 +51,56 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0",
     "black>=23.0",
     "ruff>=0.1.0",
+    "mypy>=1.5.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mshegolev/mcp-jira-confluence"
+Documentation = "https://github.com/mshegolev/mcp-jira-confluence#readme"
+Repository = "https://github.com/mshegolev/mcp-jira-confluence.git"
+Issues = "https://github.com/mshegolev/mcp-jira-confluence/issues"
+Changelog = "https://github.com/mshegolev/mcp-jira-confluence/blob/main/CHANGELOG.md"
 
 [project.scripts]
 mcp-jira-confluence = "mcp_jira_confluence.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_jira_confluence"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/pyproject.toml",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py39"
 
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
 [tool.black]
 line-length = 100
 target-version = ["py39"]
 
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+addopts = "-v --cov=mcp_jira_confluence --cov-report=term-missing"

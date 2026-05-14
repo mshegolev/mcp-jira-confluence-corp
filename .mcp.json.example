@@ -2,19 +2,14 @@
   "mcpServers": {
     "jira-confluence": {
       "type": "stdio",
-      "command": "/Users/mvschegole/.local/bin/uvx",
-      "args": [
-        "--from",
-        "mcp-jira-confluence @ file:///opt/develop/perass/mcp-jira-confluence",
-        "mcp-jira-confluence"
-      ],
+      "command": "uvx",
+      "args": ["mcp-jira-confluence"],
       "env": {
-        "JIRA_URL": "https://jira.mts.ru",
+        "JIRA_URL": "https://jira.example.com",
         "JIRA_PERSONAL_TOKEN": "${JIRA_PERSONAL_TOKEN}",
-        "JIRA_SSL_VERIFY": "false",
-        "CONFLUENCE_URL": "https://confluence.mts.ru",
+        "CONFLUENCE_URL": "https://confluence.example.com",
         "CONFLUENCE_PERSONAL_TOKEN": "${CONFLUENCE_PERSONAL_TOKEN}",
-        "CONFLUENCE_SSL_VERIFY": "false",
+        "MCP_BYPASS_DOMAINS": "*.example.com,internal.corp",
         "HTTP_PROXY": "",
         "HTTPS_PROXY": "",
         "http_proxy": "",
