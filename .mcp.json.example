@@ -3,7 +3,7 @@
     "jira-confluence": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["mcp-jira-confluence"],
+      "args": ["mcp-jira-confluence-corp"],
       "env": {
         "JIRA_URL": "https://jira.example.com",
         "JIRA_PERSONAL_TOKEN": "${JIRA_PERSONAL_TOKEN}",

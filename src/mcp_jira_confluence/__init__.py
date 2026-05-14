@@ -1,4 +1,4 @@
-"""MCP server for Jira and Confluence with corporate proxy support."""
+"""MCP server for Atlassian Jira and Confluence with corporate proxy support."""
 
 __version__ = "0.1.0"
 __author__ = "Mikhail Shegolev"

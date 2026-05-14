@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Evaluation suite for mcp-jira-confluence-corp.
+
+Each <qa_pair> describes a realistic, complex, read-only question that an
+agent should be able to answer by composing the MCP tools exposed by this
+server (jira_*, confluence_*). Answers are short, deterministic strings.
+
+To run an evaluation against a live Jira/Confluence instance, set
+JIRA_URL, JIRA_PERSONAL_TOKEN, CONFLUENCE_URL, CONFLUENCE_PERSONAL_TOKEN
+in the environment, then point your agent runner at this file.
+-->
+<evaluation>
+  <qa_pair>
+    <question>Using the Jira MCP tools, list every available workflow transition for issue PROJ-1 and return the comma-separated transition names in alphabetical order.</question>
+    <answer>Done, In Progress, To Do</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Use jira_search_issues with the JQL "project = PROJ AND status = Done ORDER BY created ASC". Limit results to 1. What is the issue key of the oldest Done issue in PROJ?</question>
+    <answer>PROJ-1</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Call jira_get_my_issues with no project filter and limit=1. What is the status name of the highest-priority issue currently assigned to the authenticated user?</question>
+    <answer>In Progress</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Call jira_summarize_issue for PROJ-2 with include_comments=true and comment_limit=1. How many comments does the issue currently have, as reported in the returned "count" field of the comments section?</question>
+    <answer>3</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Use jira_list_agile_boards filtered by project_key=PROJ. What is the integer id of the board named "PROJ board"?</question>
+    <answer>10</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Use jira_list_board_sprints for board id 10 with state="active". What is the name of the currently active sprint?</question>
+    <answer>Sprint 5</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Call jira_list_sprint_issues for sprint id 50. How many issues are in the sprint, as reported in the "total" field of the paginated response?</question>
+    <answer>12</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Call confluence_get_page with page_id=100000. What is the title of the page?</question>
+    <answer>Home</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Use confluence_search with cql='space = DOC AND type = page AND title = "Release Notes"' and limit=1. What is the page id of the matching page?</question>
+    <answer>100100</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Call confluence_get_page_labels for page_id=100100. Return the comma-separated label names sorted alphabetically.</question>
+    <answer>published, release-notes</answer>
+  </qa_pair>
+</evaluation>

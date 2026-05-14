@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-jira-confluence"
+name = "mcp-jira-confluence-corp"
 version = "0.1.0"
-description = "MCP server for Jira and Confluence with built-in corporate proxy support and automatic domain bypass"
+description = "MCP server for Atlassian Jira and Confluence with built-in corporate proxy bypass, self-signed certificate handling, and PAT authentication"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{name = "Mikhail Shegolev", email = "mshegolev@gmail.com"}]
@@ -60,14 +60,14 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mshegolev/mcp-jira-confluence"
-Documentation = "https://github.com/mshegolev/mcp-jira-confluence#readme"
-Repository = "https://github.com/mshegolev/mcp-jira-confluence.git"
-Issues = "https://github.com/mshegolev/mcp-jira-confluence/issues"
-Changelog = "https://github.com/mshegolev/mcp-jira-confluence/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/mshegolev/mcp-jira-confluence-corp"
+Documentation = "https://github.com/mshegolev/mcp-jira-confluence-corp#readme"
+Repository = "https://github.com/mshegolev/mcp-jira-confluence-corp.git"
+Issues = "https://github.com/mshegolev/mcp-jira-confluence-corp/issues"
+Changelog = "https://github.com/mshegolev/mcp-jira-confluence-corp/blob/main/CHANGELOG.md"
 
 [project.scripts]
-mcp-jira-confluence = "mcp_jira_confluence.server:main"
+mcp-jira-confluence-corp = "mcp_jira_confluence.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_jira_confluence"]

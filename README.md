@@ -1,9 +1,9 @@
-# mcp-jira-confluence
+# mcp-jira-confluence-corp
 
-[![PyPI version](https://img.shields.io/pypi/v/mcp-jira-confluence.svg)](https://pypi.org/project/mcp-jira-confluence/)
-[![Python versions](https://img.shields.io/pypi/pyversions/mcp-jira-confluence.svg)](https://pypi.org/project/mcp-jira-confluence/)
+[![PyPI version](https://img.shields.io/pypi/v/mcp-jira-confluence-corp.svg)](https://pypi.org/project/mcp-jira-confluence-corp/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mcp-jira-confluence-corp.svg)](https://pypi.org/project/mcp-jira-confluence-corp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/mshegolev/mcp-jira-confluence/actions/workflows/ci.yml/badge.svg)](https://github.com/mshegolev/mcp-jira-confluence/actions/workflows/ci.yml)
+[![CI](https://github.com/mshegolev/mcp-jira-confluence-corp/actions/workflows/ci.yml/badge.svg)](https://github.com/mshegolev/mcp-jira-confluence-corp/actions/workflows/ci.yml)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server for Atlassian
 Jira and Confluence, designed for corporate networks. It transparently bypasses
@@ -21,7 +21,7 @@ struggle inside many corporate environments where:
 3. The only available credential is a Personal Access Token rather than a
    username/password pair.
 
-`mcp-jira-confluence` addresses all three by:
+`mcp-jira-confluence-corp` addresses all three by:
 
 - Clearing `HTTP_PROXY`-style environment variables on client construction.
 - Listing internal domains that should bypass any proxy (via the
@@ -32,13 +32,13 @@ struggle inside many corporate environments where:
 ## Installation
 
 ```bash
-pip install mcp-jira-confluence
+pip install mcp-jira-confluence-corp
 ```
 
 Or run it without installing using [`uvx`](https://github.com/astral-sh/uv):
 
 ```bash
-uvx mcp-jira-confluence
+uvx mcp-jira-confluence-corp
 ```
 
 ## Configuration
@@ -61,7 +61,7 @@ The server is configured through environment variables:
   "mcpServers": {
     "jira-confluence": {
       "command": "uvx",
-      "args": ["mcp-jira-confluence"],
+      "args": ["mcp-jira-confluence-corp"],
       "env": {
         "JIRA_URL": "https://jira.example.com",
         "JIRA_PERSONAL_TOKEN": "<your-token>",
@@ -78,14 +78,49 @@ The server is configured through environment variables:
 
 ## Available tools
 
-| Tool                       | Description                            |
-|----------------------------|----------------------------------------|
-| `jira_get_issue`           | Get a Jira issue by key                |
-| `jira_search`              | Search Jira issues using JQL           |
-| `jira_add_comment`         | Add a comment to a Jira issue          |
-| `confluence_get_page`      | Get a Confluence page by ID            |
-| `confluence_update_page`   | Update an existing Confluence page     |
-| `confluence_create_page`   | Create a new Confluence page           |
+### Jira (read-only)
+| Tool                              | Description                                  |
+|-----------------------------------|----------------------------------------------|
+| `jira_get_issue`                  | Get a Jira issue by key                      |
+| `jira_search_issues`              | Search issues using JQL with pagination      |
+| `jira_get_issue_comments`         | List comments on an issue                    |
+| `jira_get_issue_transitions`      | List available workflow transitions          |
+| `jira_get_issue_changelog`        | Get issue history (status, field changes)    |
+| `jira_list_projects`              | List accessible projects                     |
+| `jira_get_project`                | Get details of a specific project            |
+| `jira_get_user`                   | Get a user profile                           |
+
+### Jira (write)
+| Tool                              | Description                                  |
+|-----------------------------------|----------------------------------------------|
+| `jira_create_issue`               | Create a new issue                           |
+| `jira_update_issue`               | Update fields of an existing issue           |
+| `jira_add_comment`                | Add a comment to an issue                    |
+| `jira_transition_issue`           | Move an issue through its workflow           |
+| `jira_assign_issue`               | Assign or unassign an issue                  |
+
+### Confluence (read-only)
+| Tool                              | Description                                  |
+|-----------------------------------|----------------------------------------------|
+| `confluence_get_page`             | Get a page by ID                             |
+| `confluence_get_page_by_title`    | Get a page by title and space                |
+| `confluence_search`               | Search using CQL                             |
+| `confluence_get_page_children`    | List child pages                             |
+| `confluence_get_page_comments`    | List page comments                           |
+| `confluence_get_page_labels`      | List labels applied to a page                |
+| `confluence_list_spaces`          | List Confluence spaces                       |
+
+### Confluence (write)
+| Tool                              | Description                                  |
+|-----------------------------------|----------------------------------------------|
+| `confluence_create_page`          | Create a new page                            |
+| `confluence_update_page`          | Update an existing page                      |
+| `confluence_add_comment`          | Add a comment to a page                      |
+| `confluence_add_label`            | Add a label to a page                        |
+| `confluence_remove_label`         | Remove a label from a page                   |
+
+All tools support both `markdown` (default) and `json` response formats for
+human-readability vs. programmatic consumption.
 
 ## Programmatic usage
 
@@ -126,8 +161,8 @@ client = JiraConfluenceClient(proxy_config=proxy_config)
 ## Development
 
 ```bash
-git clone https://github.com/mshegolev/mcp-jira-confluence.git
-cd mcp-jira-confluence
+git clone https://github.com/mshegolev/mcp-jira-confluence-corp.git
+cd mcp-jira-confluence-corp
 pip install -e ".[dev]"
 
 pytest tests/
