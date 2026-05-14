@@ -269,6 +269,46 @@ class ConfluencePageAttachmentsInput(_StrictModel):
 
 
 # ---------------------------------------------------------------------------
+# Workflow tools (inspired by akhilthomas236/jira-confluence-mcp)
+# ---------------------------------------------------------------------------
+
+class JiraExtractLinksInput(_StrictModel):
+    """Input for extracting Confluence and Git/VCS links from a Jira issue."""
+
+    issue_key: str = Field(
+        ...,
+        description="Issue key, e.g. 'PROJ-123'",
+        pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$",
+    )
+    include_comments: bool = Field(
+        default=True, description="Also scan comments for links"
+    )
+    include_remote_links: bool = Field(
+        default=True, description="Also fetch Jira remote issue links"
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class JiraStandupSummaryInput(_StrictModel):
+    """Input for generating a daily standup summary for a sprint."""
+
+    sprint_id: Optional[int] = Field(
+        default=None,
+        description=(
+            "Sprint ID to summarize. If omitted, board_id must be provided and "
+            "the active sprint is used."
+        ),
+        ge=1,
+    )
+    board_id: Optional[int] = Field(
+        default=None,
+        description="Board ID — used to find the active sprint if sprint_id is not given",
+        ge=1,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# ---------------------------------------------------------------------------
 # Confluence input models
 # ---------------------------------------------------------------------------
 

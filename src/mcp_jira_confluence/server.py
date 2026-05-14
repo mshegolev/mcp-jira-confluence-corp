@@ -19,6 +19,8 @@ from mcp.server.fastmcp import FastMCP
 from .client import JiraConfluenceClient
 from .confluence_tools import register_confluence_tools
 from .jira_tools import register_jira_tools
+from .prompts import register_prompts
+from .workflow_tools import register_workflow_tools
 
 # stdio servers must NOT log to stdout — the SDK uses stdout for the protocol.
 logging.basicConfig(
@@ -35,6 +37,8 @@ def create_server() -> FastMCP:
     client = JiraConfluenceClient()
     register_jira_tools(mcp, client)
     register_confluence_tools(mcp, client)
+    register_workflow_tools(mcp, client)
+    register_prompts(mcp)
     return mcp
 
 

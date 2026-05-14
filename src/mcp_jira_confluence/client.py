@@ -235,6 +235,24 @@ class JiraConfluenceClient:
         """List issues in a sprint."""
         return self.jira.get_sprint_issues(sprint_id, start=start, limit=limit)
 
+    def get_remote_links(self, issue_key: str) -> list[dict[str, Any]]:
+        """Return Jira 'remote' issue links (web links, Confluence links, etc.)."""
+        try:
+            data = self.jira.get_issue_remote_links(issue_key)
+        except AttributeError:
+            data = self.jira.get(f"rest/api/2/issue/{issue_key}/remotelink")
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            return data.get("issues") or data.get("values") or []
+        return []
+
+    def get_active_sprint_for_board(self, board_id: int) -> Optional[dict[str, Any]]:
+        """Return the first active sprint of a board, or None."""
+        data = self.list_board_sprints(board_id, state="active", limit=1, start=0)
+        sprints = data.get("values", []) if isinstance(data, dict) else (data or [])
+        return sprints[0] if sprints else None
+
     def summarize_issue(
         self,
         issue_key: str,

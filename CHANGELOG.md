@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-14
+
+### Added
+- **2 new workflow tools** (inspired by `akhilthomas236/jira-confluence-mcp`):
+  - `jira_extract_links` — pull every Confluence / Git URL out of an issue's
+    description, comments, and remote links; classified and de-duplicated.
+  - `jira_daily_standup_summary` — one-call standup picture of a sprint:
+    progress %, status counts, per-assignee workload, blockers.
+- **6 MCP prompts** for opinionated workflows. Prompts compose multiple tool
+  calls and encode reusable agent procedures:
+  - `confluence_create_release_notes` — generate release notes from Jira
+    issues filtered by `fixVersion` and publish as a Confluence page.
+  - `confluence_document_feature` — draft a feature page from a Jira epic /
+    story, pulling related Git repos and Confluence links automatically.
+  - `confluence_audit_page` — assess a page for staleness, missing metadata,
+    open comments, and orphan children; produces a written recommendation.
+  - `confluence_summarize_space` — survey an entire space: page counts,
+    recently updated, stale, top contributors.
+  - `jira_sprint_report` — sprint review / retro-ready report.
+  - `jira_triage_my_issues` — triage the user's own assigned issues with a
+    "now / stale / blocked / defer" plan.
+
+### Changed
+- Total tool count: 34 (was 32 in v0.1.0).
+- Total prompt count: 6 (was 0 in v0.1.0).
+
+[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mshegolev/mcp-jira-confluence-corp/releases/tag/v0.2.0
+
 ## [0.1.0] - 2026-05-14
 
 ### Added
