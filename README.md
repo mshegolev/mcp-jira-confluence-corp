@@ -4,6 +4,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/mcp-jira-confluence-corp.svg)](https://pypi.org/project/mcp-jira-confluence-corp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/mshegolev/mcp-jira-confluence-corp/actions/workflows/ci.yml/badge.svg)](https://github.com/mshegolev/mcp-jira-confluence-corp/actions/workflows/ci.yml)
+[![Glama MCP Server](https://glama.ai/mcp/servers/mshegolev/mcp-jira-confluence-corp/badge)](https://glama.ai/mcp/servers/mshegolev/mcp-jira-confluence-corp)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server for Atlassian
 Jira and Confluence, designed for corporate networks. It transparently bypasses
