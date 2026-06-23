@@ -90,6 +90,7 @@ The server is configured through environment variables:
 | `jira_list_projects`              | List accessible projects                     |
 | `jira_get_project`                | Get details of a specific project            |
 | `jira_get_user`                   | Get a user profile                           |
+| `jira_field_map`                  | Map Jira field IDs, names, schemas, and editability |
 
 ### Jira (write)
 | Tool                              | Description                                  |
@@ -145,6 +146,10 @@ client.update_page(
     title="Release notes",
     body="<p>Updated content in Confluence Storage Format.</p>",
 )
+
+field_map = client.build_field_map(project_key="PROJ", issue_key="PROJ-123")
+for row in field_map["rows"]:
+    print(row["field_id"], row["field_name"], row["schema_type"])
 ```
 
 ### Customizing proxy bypass

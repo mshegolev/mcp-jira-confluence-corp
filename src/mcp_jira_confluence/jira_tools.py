@@ -18,6 +18,7 @@ from .models import (
     JiraBoardSprintsInput,
     JiraCommentInput,
     JiraCreateIssueInput,
+    JiraFieldMapInput,
     JiraIssueKey,
     JiraMyIssuesInput,
     JiraPagedInput,
@@ -34,6 +35,7 @@ from .utils import (
     format_response,
     handle_error,
     paginate_list,
+    render_field_map_markdown,
     render_issue_list_markdown,
     render_issue_markdown,
     render_simple_list_markdown,
@@ -242,6 +244,34 @@ def register_jira_tools(mcp: FastMCP, client: JiraConfluenceClient) -> None:
             return handle_error(f"get_user({params.username})", exc)
 
     @mcp.tool(
+        name="jira_field_map",
+        annotations={
+            "title": "Map Jira Fields",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
+    )
+    async def jira_field_map(params: JiraFieldMapInput) -> str:
+        """Build a mapping table for Jira field IDs, names, schemas, and editability.
+
+        With no arguments, returns the global field catalog. Supplying
+        ``project_key`` adds create metadata for that project's issue types.
+        Supplying ``issue_key`` adds edit metadata and current sample values for
+        that issue, which is useful for updating custom fields by API ID.
+        """
+        try:
+            payload = client.build_field_map(
+                project_key=params.project_key,
+                issue_key=params.issue_key,
+                max_rows=params.max_rows,
+            )
+            return format_response(payload, params.response_format, render_field_map_markdown)
+        except Exception as exc:
+            return handle_error("field_map", exc)
+
+    @mcp.tool(
         name="jira_get_my_issues",
         annotations={
             "title": "Get My Assigned Issues",
@@ -261,7 +291,9 @@ def register_jira_tools(mcp: FastMCP, client: JiraConfluenceClient) -> None:
                 start=params.offset,
             )
             issues = data.get("issues", [])
-            payload = paginate_list(issues, params.limit, params.offset, total=data.get("total", len(issues)))
+            payload = paginate_list(
+                issues, params.limit, params.offset, total=data.get("total", len(issues))
+            )
             return format_response(
                 payload,
                 params.response_format,
@@ -327,7 +359,9 @@ def register_jira_tools(mcp: FastMCP, client: JiraConfluenceClient) -> None:
             return format_response(
                 payload,
                 params.response_format,
-                lambda d: render_simple_list_markdown(d["items"], "Agile Boards", ["id", "name", "type"]),
+                lambda d: render_simple_list_markdown(
+                    d["items"], "Agile Boards", ["id", "name", "type"]
+                ),
             )
         except Exception as exc:
             return handle_error("list_agile_boards", exc)

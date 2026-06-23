@@ -17,13 +17,14 @@ from .client import JiraConfluenceClient
 from .models import (
     JiraExtractLinksInput,
     JiraStandupSummaryInput,
-    ResponseFormat,
 )
 from .utils import format_response, handle_error
 
 # Regex patterns for link extraction
 _URL_RE = re.compile(r"https?://[^\s\"'<>)]+", re.IGNORECASE)
-_CONFLUENCE_RE = re.compile(r"https?://[^\s\"'<>)]*?(confluence|atlassian\.net/wiki)[^\s\"'<>)]*", re.IGNORECASE)
+_CONFLUENCE_RE = re.compile(
+    r"https?://[^\s\"'<>)]*?(confluence|atlassian\.net/wiki)[^\s\"'<>)]*", re.IGNORECASE
+)
 _GIT_HOST_RE = re.compile(
     r"https?://([^/]*(github\.com|gitlab\.[^/]+|bitbucket\.org|dev\.azure\.com|azure\.com))[^\s\"'<>)]*",
     re.IGNORECASE,
@@ -220,7 +221,9 @@ def register_workflow_tools(mcp: FastMCP, client: JiraConfluenceClient) -> None:
                 if d["blockers"]:
                     lines.extend(["", f"## 🚧 Blockers ({len(d['blockers'])})"])
                     for b in d["blockers"]:
-                        lines.append(f"- **{b['key']}** [{b['status']}] — {b['summary']} _({b['assignee']})_")
+                        lines.append(
+                            f"- **{b['key']}** [{b['status']}] — {b['summary']} _({b['assignee']})_"
+                        )
                 return "\n".join(lines)
 
             return format_response(payload, params.response_format, _md)

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-23
+
+### Added
+- `jira_field_map` read-only tool for scanning Jira field IDs, names, schemas,
+  allowed-value counts, create metadata, edit metadata, and current issue sample
+  values. It supports global catalog mode, project-scoped create metadata, and
+  issue-scoped edit metadata for safe custom-field updates.
+
+### Changed
+- Package metadata now requires Python >=3.10, matching the installed
+  `mcp>=1.0.0` dependency constraints.
+
 ## [0.2.0] - 2026-05-14
 
 ### Added
@@ -33,7 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Total tool count: 34 (was 32 in v0.1.0).
 - Total prompt count: 6 (was 0 in v0.1.0).
 
-[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/mshegolev/mcp-jira-confluence-corp/releases/tag/v0.2.0
 
 ## [0.1.0] - 2026-05-14
@@ -97,5 +110,4 @@ Confluence, causing timeouts. The built-in proxy bypass mechanism prevents this
 for any internal domain configured via `ProxyConfig.bypass_domains` or the
 `MCP_BYPASS_DOMAINS` environment variable.
 
-[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/mshegolev/mcp-jira-confluence-corp/releases/tag/v0.1.0

@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-jira-confluence-corp"
-version = "0.2.0"
+version = "0.2.1"
 description = "MCP server for Atlassian Jira and Confluence with built-in corporate proxy bypass, self-signed certificate handling, and PAT authentication"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{name = "Mikhail Shegolev", email = "mshegolev@gmail.com"}]
 license = "MIT"
 license-files = ["LICENSE"]
@@ -31,7 +31,6 @@ classifiers = [
     "Topic :: System :: Networking",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

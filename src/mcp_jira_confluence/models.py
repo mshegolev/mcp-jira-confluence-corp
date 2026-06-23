@@ -33,6 +33,7 @@ class _StrictModel(BaseModel):
 # Jira input models
 # ---------------------------------------------------------------------------
 
+
 class JiraIssueKey(_StrictModel):
     """Input for tools that act on a single Jira issue."""
 
@@ -94,13 +95,25 @@ class JiraSearchInput(_StrictModel):
 class JiraCreateIssueInput(_StrictModel):
     """Input for creating a new Jira issue."""
 
-    project_key: str = Field(..., description="Project key, e.g. 'PROJ'", min_length=1, max_length=32)
+    project_key: str = Field(
+        ..., description="Project key, e.g. 'PROJ'", min_length=1, max_length=32
+    )
     summary: str = Field(..., description="Short summary / title", min_length=1, max_length=255)
-    issue_type: str = Field(default="Task", description="Issue type name (e.g. 'Bug', 'Task', 'Story')")
-    description: Optional[str] = Field(default=None, description="Optional issue body (Jira wiki/markdown)")
-    assignee: Optional[str] = Field(default=None, description="Optional assignee username/accountId")
-    labels: Optional[list[str]] = Field(default=None, description="Optional list of labels", max_length=20)
-    priority: Optional[str] = Field(default=None, description="Optional priority name (e.g. 'High')")
+    issue_type: str = Field(
+        default="Task", description="Issue type name (e.g. 'Bug', 'Task', 'Story')"
+    )
+    description: Optional[str] = Field(
+        default=None, description="Optional issue body (Jira wiki/markdown)"
+    )
+    assignee: Optional[str] = Field(
+        default=None, description="Optional assignee username/accountId"
+    )
+    labels: Optional[list[str]] = Field(
+        default=None, description="Optional list of labels", max_length=20
+    )
+    priority: Optional[str] = Field(
+        default=None, description="Optional priority name (e.g. 'High')"
+    )
     extra_fields: Optional[dict] = Field(
         default=None,
         description=(
@@ -113,34 +126,46 @@ class JiraCreateIssueInput(_StrictModel):
 class JiraUpdateIssueInput(_StrictModel):
     """Input for updating fields of an existing Jira issue."""
 
-    issue_key: str = Field(..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
+    issue_key: str = Field(
+        ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
+    )
     fields: dict = Field(..., description="Fields to update, by Jira API name", min_length=1)
 
 
 class JiraCommentInput(_StrictModel):
     """Input for adding a comment to a Jira issue."""
 
-    issue_key: str = Field(..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
-    comment: str = Field(..., description="Comment body (Jira wiki markup)", min_length=1, max_length=32768)
+    issue_key: str = Field(
+        ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
+    )
+    comment: str = Field(
+        ..., description="Comment body (Jira wiki markup)", min_length=1, max_length=32768
+    )
 
 
 class JiraTransitionInput(_StrictModel):
     """Input for transitioning a Jira issue to a new status."""
 
-    issue_key: str = Field(..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
+    issue_key: str = Field(
+        ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
+    )
     transition_name: str = Field(
         ...,
         description="Name of the target transition (e.g. 'In Progress', 'Done'). Case-insensitive.",
         min_length=1,
         max_length=128,
     )
-    comment: Optional[str] = Field(default=None, description="Optional comment to add with the transition")
+    comment: Optional[str] = Field(
+        default=None, description="Optional comment to add with the transition"
+    )
 
 
 class JiraAssignInput(_StrictModel):
     """Input for assigning a Jira issue to a user."""
 
-    issue_key: str = Field(..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
+    issue_key: str = Field(
+        ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
+    )
     assignee: Optional[str] = Field(
         default=None,
         description="Username/accountId of the new assignee. Pass null/None to unassign.",
@@ -158,7 +183,9 @@ class JiraPagedInput(_StrictModel):
 class JiraProjectKey(_StrictModel):
     """Input requiring a Jira project key."""
 
-    project_key: str = Field(..., description="Project key, e.g. 'PROJ'", min_length=1, max_length=32)
+    project_key: str = Field(
+        ..., description="Project key, e.g. 'PROJ'", min_length=1, max_length=32
+    )
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
@@ -166,6 +193,28 @@ class JiraUserInput(_StrictModel):
     """Input for fetching a Jira user."""
 
     username: str = Field(..., description="Username or accountId", min_length=1, max_length=256)
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class JiraFieldMapInput(_StrictModel):
+    """Input for building a Jira field mapping table."""
+
+    project_key: Optional[str] = Field(
+        default=None,
+        description="Optional project key to inspect project create metadata",
+        max_length=32,
+    )
+    issue_key: Optional[str] = Field(
+        default=None,
+        description="Optional issue key to inspect edit metadata and sample values",
+        pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$",
+    )
+    max_rows: int = Field(
+        default=50,
+        description="Maximum rows per markdown table before truncation",
+        ge=1,
+        le=200,
+    )
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
@@ -194,7 +243,9 @@ class JiraSummarizeInput(_StrictModel):
     response so an agent does not have to make four separate calls.
     """
 
-    issue_key: str = Field(..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$")
+    issue_key: str = Field(
+        ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
+    )
     include_comments: bool = Field(default=True, description="Include comments")
     include_changelog: bool = Field(default=True, description="Include change history")
     include_transitions: bool = Field(default=True, description="Include available transitions")
@@ -206,10 +257,13 @@ class JiraSummarizeInput(_StrictModel):
 # Jira agile (boards / sprints) input models
 # ---------------------------------------------------------------------------
 
+
 class JiraAgileBoardsInput(_StrictModel):
     """Input for listing agile boards."""
 
-    project_key: Optional[str] = Field(default=None, description="Filter boards by project key", max_length=32)
+    project_key: Optional[str] = Field(
+        default=None, description="Filter boards by project key", max_length=32
+    )
     board_type: Optional[str] = Field(
         default=None,
         description="Filter by board type ('scrum' or 'kanban')",
@@ -250,6 +304,7 @@ class JiraSprintIssuesInput(_StrictModel):
 # Confluence extended models
 # ---------------------------------------------------------------------------
 
+
 class ConfluencePageHistoryInput(_StrictModel):
     """Input for fetching a Confluence page's version history."""
 
@@ -272,6 +327,7 @@ class ConfluencePageAttachmentsInput(_StrictModel):
 # Workflow tools (inspired by akhilthomas236/jira-confluence-mcp)
 # ---------------------------------------------------------------------------
 
+
 class JiraExtractLinksInput(_StrictModel):
     """Input for extracting Confluence and Git/VCS links from a Jira issue."""
 
@@ -280,9 +336,7 @@ class JiraExtractLinksInput(_StrictModel):
         description="Issue key, e.g. 'PROJ-123'",
         pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$",
     )
-    include_comments: bool = Field(
-        default=True, description="Also scan comments for links"
-    )
+    include_comments: bool = Field(default=True, description="Also scan comments for links")
     include_remote_links: bool = Field(
         default=True, description="Also fetch Jira remote issue links"
     )
@@ -312,10 +366,13 @@ class JiraStandupSummaryInput(_StrictModel):
 # Confluence input models
 # ---------------------------------------------------------------------------
 
+
 class ConfluencePageIdInput(_StrictModel):
     """Input for tools that act on a single Confluence page by ID."""
 
-    page_id: str = Field(..., description="Confluence page ID (numeric string)", min_length=1, max_length=32)
+    page_id: str = Field(
+        ..., description="Confluence page ID (numeric string)", min_length=1, max_length=32
+    )
     expand: str = Field(
         default="body.storage,version",
         description="Confluence expand parameter (comma-separated)",
@@ -387,14 +444,22 @@ class ConfluenceLabelInput(_StrictModel):
     """Input for adding/removing a label on a page."""
 
     page_id: str = Field(..., description="Page ID", min_length=1, max_length=32)
-    label: str = Field(..., description="Label name (no spaces)", min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_\-]+$")
+    label: str = Field(
+        ...,
+        description="Label name (no spaces)",
+        min_length=1,
+        max_length=128,
+        pattern=r"^[A-Za-z0-9_\-]+$",
+    )
 
 
 class ConfluencePageCommentInput(_StrictModel):
     """Input for adding a comment to a Confluence page."""
 
     page_id: str = Field(..., description="Page ID", min_length=1, max_length=32)
-    comment: str = Field(..., description="Comment body (Confluence Storage Format)", min_length=1, max_length=131072)
+    comment: str = Field(
+        ..., description="Comment body (Confluence Storage Format)", min_length=1, max_length=131072
+    )
 
 
 class ConfluenceListSpacesInput(_StrictModel):

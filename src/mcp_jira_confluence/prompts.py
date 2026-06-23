@@ -15,8 +15,6 @@ tools to call.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from mcp.server.fastmcp import FastMCP
 
 
@@ -39,7 +37,7 @@ def register_prompts(mcp: FastMCP) -> None:
     def confluence_create_release_notes(
         fix_version: str,
         space_key: str,
-        parent_id: Optional[str] = None,
+        parent_id: str | None = None,
     ) -> str:
         return f"""You are drafting Confluence release notes for fix version `{fix_version}` in space `{space_key}`.
 
@@ -72,7 +70,7 @@ Return the new page's URL and ID once created. Do not invent issue keys — only
     def confluence_document_feature(
         issue_key: str,
         space_key: str,
-        parent_id: Optional[str] = None,
+        parent_id: str | None = None,
         audience: str = "engineers",
     ) -> str:
         return f"""You are writing a Confluence feature page about Jira issue `{issue_key}` for audience: **{audience}**.
@@ -197,7 +195,7 @@ Produce a markdown report:
             "next, what is stale, and what should be re-prioritised."
         ),
     )
-    def jira_triage_my_issues(project_key: Optional[str] = None) -> str:
+    def jira_triage_my_issues(project_key: str | None = None) -> str:
         scope = f"in project `{project_key}`" if project_key else "across all projects"
         return f"""Help me triage my assigned Jira issues {scope}.
 

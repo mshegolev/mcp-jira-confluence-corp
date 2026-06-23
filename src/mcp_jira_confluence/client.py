@@ -153,7 +153,11 @@ class JiraConfluenceClient:
         if comment:
             self.add_comment(issue_key, comment)
         self.jira.issue_transition(issue_key, target["name"])
-        return {"issue_key": issue_key, "transition": target.get("name"), "to_status": (target.get("to") or {}).get("name")}
+        return {
+            "issue_key": issue_key,
+            "transition": target.get("name"),
+            "to_status": (target.get("to") or {}).get("name"),
+        }
 
     def assign_issue(self, issue_key: str, assignee: Optional[str]) -> None:
         """Assign or unassign a Jira issue."""
@@ -162,7 +166,7 @@ class JiraConfluenceClient:
     def get_issue_changelog(self, issue_key: str) -> list[dict[str, Any]]:
         """Return the changelog (history) of a Jira issue."""
         data = self.jira.issue(issue_key, expand="changelog")
-        return ((data.get("changelog") or {}).get("histories") or [])
+        return (data.get("changelog") or {}).get("histories") or []
 
     def list_projects(self) -> list[dict[str, Any]]:
         """List all accessible Jira projects."""
@@ -195,6 +199,201 @@ class JiraConfluenceClient:
             clauses.append(f"status in ({quoted})")
         jql = " AND ".join(clauses) + " ORDER BY priority DESC, updated DESC"
         return self.search_issues(jql, limit=limit, start=start)
+
+    def get_all_fields(self) -> list[dict[str, Any]]:
+        """Return the global Jira field catalog."""
+        return self.jira.get_all_fields() or []
+
+    def get_project_issue_types(self, project_key: str) -> list[dict[str, Any]]:
+        """Return issue types available for issue creation in a project."""
+        data = self.jira.issue_createmeta_issuetypes(project_key)
+        return self._extract_issue_types(data, project_key)
+
+    def get_project_issue_type_fields(self, project_key: str, issue_type_id: str) -> dict[str, Any]:
+        """Return create metadata fields for a project issue type."""
+        return self.jira.issue_createmeta_fieldtypes(project_key, issue_type_id) or {}
+
+    def get_issue_editmeta(self, issue_key: str) -> dict[str, Any]:
+        """Return edit metadata for a Jira issue."""
+        return self.jira.issue_editmeta(issue_key) or {}
+
+    def get_issue_fields(self, issue_key: str) -> dict[str, Any]:
+        """Return current issue field values for sampling field payload shapes."""
+        data = self.jira.issue_fields(issue_key) or {}
+        if isinstance(data, dict) and isinstance(data.get("fields"), dict):
+            return data["fields"]
+        return data if isinstance(data, dict) else {}
+
+    def build_field_map(
+        self,
+        project_key: Optional[str] = None,
+        issue_key: Optional[str] = None,
+        max_rows: int = 50,
+    ) -> dict[str, Any]:
+        """Build a normalized Jira field map from global, create, and edit metadata.
+
+        ``project_key`` adds create metadata per issue type. ``issue_key`` adds
+        edit metadata and current sample values. JSON responses include all rows;
+        markdown renderers can use ``max_rows`` to keep tables readable.
+        """
+        rows: list[dict[str, Any]] = []
+
+        global_fields = self.get_all_fields()
+        for field in global_fields:
+            if not isinstance(field, dict):
+                continue
+            rows.append(
+                self._field_map_row(
+                    context="global",
+                    context_label="Global field catalog",
+                    project_key=None,
+                    issue_key=None,
+                    issue_type=None,
+                    field_id=str(field.get("id") or field.get("key") or ""),
+                    field_meta=field,
+                )
+            )
+
+        issue_types: list[dict[str, Any]] = []
+        if project_key:
+            issue_types = self.get_project_issue_types(project_key)
+            for issue_type in issue_types:
+                issue_type_id = str(issue_type.get("id") or "")
+                if not issue_type_id:
+                    continue
+                fields_meta = self.get_project_issue_type_fields(project_key, issue_type_id)
+                for field_id, field_meta in self._extract_fields(fields_meta).items():
+                    rows.append(
+                        self._field_map_row(
+                            context="create",
+                            context_label="Project create metadata",
+                            project_key=project_key,
+                            issue_key=None,
+                            issue_type=issue_type,
+                            field_id=field_id,
+                            field_meta=field_meta,
+                        )
+                    )
+
+        if issue_key:
+            editmeta = self.get_issue_editmeta(issue_key)
+            issue_fields = self.get_issue_fields(issue_key)
+            for field_id, field_meta in self._extract_fields(editmeta).items():
+                rows.append(
+                    self._field_map_row(
+                        context="edit",
+                        context_label="Issue edit metadata",
+                        project_key=project_key,
+                        issue_key=issue_key,
+                        issue_type=None,
+                        field_id=field_id,
+                        field_meta=field_meta,
+                        sample_value=issue_fields.get(field_id),
+                    )
+                )
+
+        return {
+            "scope": {"project_key": project_key, "issue_key": issue_key},
+            "summary": {
+                "global_field_count": len(global_fields),
+                "project_issue_type_count": len(issue_types),
+                "project_field_row_count": sum(1 for row in rows if row["context"] == "create"),
+                "edit_field_row_count": sum(1 for row in rows if row["context"] == "edit"),
+                "total_rows": len(rows),
+            },
+            "project_issue_types": issue_types,
+            "max_rows": max_rows,
+            "rows": rows,
+        }
+
+    @staticmethod
+    def _extract_issue_types(data: Any, project_key: str) -> list[dict[str, Any]]:
+        """Normalize Jira createmeta issue type payloads across API variants."""
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict)]
+        if not isinstance(data, dict):
+            return []
+        if isinstance(data.get("issuetypes"), list):
+            return [item for item in data["issuetypes"] if isinstance(item, dict)]
+        projects = data.get("projects")
+        if isinstance(projects, list):
+            for project in projects:
+                if not isinstance(project, dict):
+                    continue
+                if project.get("key") == project_key or len(projects) == 1:
+                    issue_types = project.get("issuetypes") or []
+                    return [item for item in issue_types if isinstance(item, dict)]
+        values = data.get("values")
+        if isinstance(values, list):
+            return [item for item in values if isinstance(item, dict)]
+        return []
+
+    @staticmethod
+    def _extract_fields(data: Any) -> dict[str, dict[str, Any]]:
+        """Normalize metadata payloads to ``field_id -> field metadata``."""
+        if not isinstance(data, dict):
+            return {}
+        fields = data.get("fields")
+        if isinstance(fields, dict):
+            return {str(key): value for key, value in fields.items() if isinstance(value, dict)}
+
+        projects = data.get("projects")
+        if isinstance(projects, list):
+            for project in projects:
+                if not isinstance(project, dict):
+                    continue
+                issue_types = project.get("issuetypes") or []
+                for issue_type in issue_types:
+                    if not isinstance(issue_type, dict):
+                        continue
+                    fields = issue_type.get("fields")
+                    if isinstance(fields, dict):
+                        return {
+                            str(key): value
+                            for key, value in fields.items()
+                            if isinstance(value, dict)
+                        }
+        return {}
+
+    @staticmethod
+    def _field_map_row(
+        *,
+        context: str,
+        context_label: str,
+        project_key: Optional[str],
+        issue_key: Optional[str],
+        issue_type: Optional[dict[str, Any]],
+        field_id: str,
+        field_meta: dict[str, Any],
+        sample_value: Any = None,
+    ) -> dict[str, Any]:
+        """Normalize one Jira field metadata item for table rendering."""
+        schema = field_meta.get("schema") or {}
+        operations = field_meta.get("operations") or []
+        allowed_values = field_meta.get("allowedValues") or []
+        schema_custom = schema.get("custom")
+        field_name = field_meta.get("name") or field_meta.get("fieldName") or field_id
+        return {
+            "context": context,
+            "context_label": context_label,
+            "project_key": project_key,
+            "issue_key": issue_key,
+            "issue_type_id": (issue_type or {}).get("id"),
+            "issue_type_name": (issue_type or {}).get("name"),
+            "field_id": field_id,
+            "field_name": field_name,
+            "kind": "custom" if field_id.startswith("customfield_") or schema_custom else "system",
+            "schema_type": schema.get("type"),
+            "schema_items": schema.get("items"),
+            "schema_custom": schema_custom,
+            "required": field_meta.get("required"),
+            "operations": operations,
+            "allowed_values": allowed_values,
+            "allowed_values_count": (
+                len(allowed_values) if isinstance(allowed_values, list) else None
+            ),
+            "sample_value": sample_value,
+        }
 
     # Agile
     def list_agile_boards(
@@ -333,7 +532,9 @@ class JiraConfluenceClient:
         """Search Confluence with a CQL query."""
         return self.confluence.cql(cql, limit=limit, start=start)
 
-    def get_page_children(self, page_id: str, limit: int = 25, start: int = 0) -> list[dict[str, Any]]:
+    def get_page_children(
+        self, page_id: str, limit: int = 25, start: int = 0
+    ) -> list[dict[str, Any]]:
         """List child pages of a Confluence page."""
         return self.confluence.get_page_child_by_type(
             page_id, type="page", start=start, limit=limit
