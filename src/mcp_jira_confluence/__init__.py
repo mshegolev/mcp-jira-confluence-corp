@@ -1,6 +1,6 @@
 """MCP server for Atlassian Jira and Confluence with corporate proxy support."""
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __author__ = "Mikhail Shegolev"
 
 from .client import JiraConfluenceClient

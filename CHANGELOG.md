@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-10
+
+### Fixed
+- **Pin `mcp` to `>=1.2,<2`.** `mcp 2.0` removed `mcp.server.fastmcp`, which this
+  server imports in six modules. The unbounded `mcp>=1.0.0` let a clean
+  `pip install -e '.[dev]'` resolve `mcp 2.0`, and the
+  `mcp-jira-confluence-corp` console script then died at import with
+  `ModuleNotFoundError: No module named 'mcp.server.fastmcp'`. The unit tests
+  did not catch it — none of them import the server — so the package installed
+  and tested green while being unrunnable; from an MCP client the failure
+  surfaced as an opaque transport error.
+- The lower bound was wrong as well: `FastMCP` first shipped in `mcp 1.2.0`
+  (`mcp 1.0.x` / `1.1.x` have no `mcp.server.fastmcp`), so the declared floor of
+  `1.0.0` could never have worked. Raised `1.0.0` → `1.2`.
+
 ## [0.2.1] - 2026-06-23
 
 ### Added
@@ -45,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Total tool count: 34 (was 32 in v0.1.0).
 - Total prompt count: 6 (was 0 in v0.1.0).
 
-[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...v0.2.2
 [0.2.1]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/mshegolev/mcp-jira-confluence-corp/releases/tag/v0.2.0
 
