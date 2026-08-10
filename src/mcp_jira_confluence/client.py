@@ -1,7 +1,7 @@
 """Unified client for Jira and Confluence with corporate proxy support."""
 
 import os
-from typing import Any, Optional
+from typing import Any
 
 from atlassian import Confluence, Jira
 
@@ -26,9 +26,9 @@ class JiraConfluenceClient:
 
     def __init__(
         self,
-        jira_config: Optional[JiraConfig] = None,
-        confluence_config: Optional[ConfluenceConfig] = None,
-        proxy_config: Optional[ProxyConfig] = None,
+        jira_config: JiraConfig | None = None,
+        confluence_config: ConfluenceConfig | None = None,
+        proxy_config: ProxyConfig | None = None,
     ):
         self.jira_config = jira_config or JiraConfig.from_env()
         self.confluence_config = confluence_config or ConfluenceConfig.from_env()
@@ -36,8 +36,8 @@ class JiraConfluenceClient:
 
         self._clear_proxy_env()
 
-        self._jira: Optional[Jira] = None
-        self._confluence: Optional[Confluence] = None
+        self._jira: Jira | None = None
+        self._confluence: Confluence | None = None
 
     @staticmethod
     def _clear_proxy_env() -> None:
@@ -82,7 +82,7 @@ class JiraConfluenceClient:
     # Jira methods
     # ------------------------------------------------------------------
     def get_issue(
-        self, issue_key: str, fields: Optional[list[str]] = None, expand: Optional[str] = None
+        self, issue_key: str, fields: list[str] | None = None, expand: str | None = None
     ) -> dict[str, Any]:
         """Get a Jira issue by key."""
         kwargs: dict[str, Any] = {}
@@ -97,7 +97,7 @@ class JiraConfluenceClient:
         jql: str,
         limit: int = 50,
         start: int = 0,
-        fields: Optional[list[str]] = None,
+        fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Search Jira issues using JQL.
 
@@ -136,7 +136,7 @@ class JiraConfluenceClient:
         self,
         issue_key: str,
         transition_name: str,
-        comment: Optional[str] = None,
+        comment: str | None = None,
     ) -> dict[str, Any]:
         """Move an issue through its workflow by transition name (case-insensitive)."""
         transitions = self.get_issue_transitions(issue_key)
@@ -159,7 +159,7 @@ class JiraConfluenceClient:
             "to_status": (target.get("to") or {}).get("name"),
         }
 
-    def assign_issue(self, issue_key: str, assignee: Optional[str]) -> None:
+    def assign_issue(self, issue_key: str, assignee: str | None) -> None:
         """Assign or unassign a Jira issue."""
         self.jira.assign_issue(issue_key, assignee)
 
@@ -185,8 +185,8 @@ class JiraConfluenceClient:
 
     def get_my_issues(
         self,
-        project_key: Optional[str] = None,
-        statuses: Optional[list[str]] = None,
+        project_key: str | None = None,
+        statuses: list[str] | None = None,
         limit: int = 50,
         start: int = 0,
     ) -> dict[str, Any]:
@@ -226,8 +226,8 @@ class JiraConfluenceClient:
 
     def build_field_map(
         self,
-        project_key: Optional[str] = None,
-        issue_key: Optional[str] = None,
+        project_key: str | None = None,
+        issue_key: str | None = None,
         max_rows: int = 50,
     ) -> dict[str, Any]:
         """Build a normalized Jira field map from global, create, and edit metadata.
@@ -360,9 +360,9 @@ class JiraConfluenceClient:
         *,
         context: str,
         context_label: str,
-        project_key: Optional[str],
-        issue_key: Optional[str],
-        issue_type: Optional[dict[str, Any]],
+        project_key: str | None,
+        issue_key: str | None,
+        issue_type: dict[str, Any] | None,
         field_id: str,
         field_meta: dict[str, Any],
         sample_value: Any = None,
@@ -398,8 +398,8 @@ class JiraConfluenceClient:
     # Agile
     def list_agile_boards(
         self,
-        project_key: Optional[str] = None,
-        board_type: Optional[str] = None,
+        project_key: str | None = None,
+        board_type: str | None = None,
         limit: int = 50,
         start: int = 0,
     ) -> dict[str, Any]:
@@ -446,7 +446,7 @@ class JiraConfluenceClient:
             return data.get("issues") or data.get("values") or []
         return []
 
-    def get_active_sprint_for_board(self, board_id: int) -> Optional[dict[str, Any]]:
+    def get_active_sprint_for_board(self, board_id: int) -> dict[str, Any] | None:
         """Return the first active sprint of a board, or None."""
         data = self.list_board_sprints(board_id, state="active", limit=1, start=0)
         sprints = data.get("values", []) if isinstance(data, dict) else (data or [])
@@ -493,7 +493,7 @@ class JiraConfluenceClient:
         space_key: str,
         title: str,
         body: str,
-        parent_id: Optional[str] = None,
+        parent_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a new Confluence page in the given space."""
         return self.confluence.create_page(
@@ -559,7 +559,7 @@ class JiraConfluenceClient:
         return data or []
 
     def list_spaces(
-        self, limit: int = 25, start: int = 0, space_type: Optional[str] = None
+        self, limit: int = 25, start: int = 0, space_type: str | None = None
     ) -> dict[str, Any]:
         """List Confluence spaces."""
         kwargs: dict[str, Any] = {"limit": limit, "start": start}

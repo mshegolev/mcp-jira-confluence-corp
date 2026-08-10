@@ -8,7 +8,6 @@ on-prem Atlassian traffic.
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 from urllib.parse import urlparse
 
 
@@ -71,9 +70,9 @@ class JiraConfig:
     """Jira connection configuration."""
 
     url: str
-    username: Optional[str] = None
-    token: Optional[str] = None
-    personal_token: Optional[str] = None
+    username: str | None = None
+    token: str | None = None
+    personal_token: str | None = None
 
     @classmethod
     def from_env(cls) -> "JiraConfig":
@@ -107,9 +106,9 @@ class ConfluenceConfig:
     """Confluence connection configuration."""
 
     url: str
-    username: Optional[str] = None
-    token: Optional[str] = None
-    personal_token: Optional[str] = None
+    username: str | None = None
+    token: str | None = None
+    personal_token: str | None = None
 
     @classmethod
     def from_env(cls) -> "ConfluenceConfig":
