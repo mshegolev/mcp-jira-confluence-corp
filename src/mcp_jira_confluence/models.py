@@ -7,7 +7,6 @@ Every tool accepts a single Pydantic model that:
 """
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -70,7 +69,7 @@ class JiraSearchInput(_StrictModel):
         description="Number of issues to skip (for pagination)",
         ge=0,
     )
-    fields: Optional[list[str]] = Field(
+    fields: list[str] | None = Field(
         default=None,
         description=(
             "Optional list of issue fields to return (default: a useful subset). "
@@ -102,19 +101,15 @@ class JiraCreateIssueInput(_StrictModel):
     issue_type: str = Field(
         default="Task", description="Issue type name (e.g. 'Bug', 'Task', 'Story')"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Optional issue body (Jira wiki/markdown)"
     )
-    assignee: Optional[str] = Field(
-        default=None, description="Optional assignee username/accountId"
-    )
-    labels: Optional[list[str]] = Field(
+    assignee: str | None = Field(default=None, description="Optional assignee username/accountId")
+    labels: list[str] | None = Field(
         default=None, description="Optional list of labels", max_length=20
     )
-    priority: Optional[str] = Field(
-        default=None, description="Optional priority name (e.g. 'High')"
-    )
-    extra_fields: Optional[dict] = Field(
+    priority: str | None = Field(default=None, description="Optional priority name (e.g. 'High')")
+    extra_fields: dict | None = Field(
         default=None,
         description=(
             "Additional Jira fields by API name, merged into the create request. "
@@ -155,7 +150,7 @@ class JiraTransitionInput(_StrictModel):
         min_length=1,
         max_length=128,
     )
-    comment: Optional[str] = Field(
+    comment: str | None = Field(
         default=None, description="Optional comment to add with the transition"
     )
 
@@ -166,7 +161,7 @@ class JiraAssignInput(_StrictModel):
     issue_key: str = Field(
         ..., description="Issue key, e.g. 'PROJ-123'", pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$"
     )
-    assignee: Optional[str] = Field(
+    assignee: str | None = Field(
         default=None,
         description="Username/accountId of the new assignee. Pass null/None to unassign.",
     )
@@ -199,12 +194,12 @@ class JiraUserInput(_StrictModel):
 class JiraFieldMapInput(_StrictModel):
     """Input for building a Jira field mapping table."""
 
-    project_key: Optional[str] = Field(
+    project_key: str | None = Field(
         default=None,
         description="Optional project key to inspect project create metadata",
         max_length=32,
     )
-    issue_key: Optional[str] = Field(
+    issue_key: str | None = Field(
         default=None,
         description="Optional issue key to inspect edit metadata and sample values",
         pattern=r"^[A-Za-z][A-Za-z0-9_]*-\d+$",
@@ -221,12 +216,12 @@ class JiraFieldMapInput(_StrictModel):
 class JiraMyIssuesInput(_StrictModel):
     """Input for listing issues assigned to the current user."""
 
-    project_key: Optional[str] = Field(
+    project_key: str | None = Field(
         default=None,
         description="Optional project key to filter by",
         max_length=32,
     )
-    statuses: Optional[list[str]] = Field(
+    statuses: list[str] | None = Field(
         default=None,
         description="Filter by status names (e.g. ['Open', 'In Progress'])",
         max_length=20,
@@ -261,10 +256,10 @@ class JiraSummarizeInput(_StrictModel):
 class JiraAgileBoardsInput(_StrictModel):
     """Input for listing agile boards."""
 
-    project_key: Optional[str] = Field(
+    project_key: str | None = Field(
         default=None, description="Filter boards by project key", max_length=32
     )
-    board_type: Optional[str] = Field(
+    board_type: str | None = Field(
         default=None,
         description="Filter by board type ('scrum' or 'kanban')",
         pattern=r"^(scrum|kanban)$",
@@ -346,7 +341,7 @@ class JiraExtractLinksInput(_StrictModel):
 class JiraStandupSummaryInput(_StrictModel):
     """Input for generating a daily standup summary for a sprint."""
 
-    sprint_id: Optional[int] = Field(
+    sprint_id: int | None = Field(
         default=None,
         description=(
             "Sprint ID to summarize. If omitted, board_id must be provided and "
@@ -354,7 +349,7 @@ class JiraStandupSummaryInput(_StrictModel):
         ),
         ge=1,
     )
-    board_id: Optional[int] = Field(
+    board_id: int | None = Field(
         default=None,
         description="Board ID — used to find the active sprint if sprint_id is not given",
         ge=1,
@@ -415,7 +410,7 @@ class ConfluenceCreatePageInput(_StrictModel):
         min_length=0,
         max_length=2_000_000,
     )
-    parent_id: Optional[str] = Field(default=None, description="Optional parent page ID")
+    parent_id: str | None = Field(default=None, description="Optional parent page ID")
 
 
 class ConfluenceUpdatePageInput(_StrictModel):
@@ -467,7 +462,7 @@ class ConfluenceListSpacesInput(_StrictModel):
 
     limit: int = Field(default=25, description="Max spaces to return", ge=1, le=200)
     offset: int = Field(default=0, description="Spaces to skip", ge=0)
-    space_type: Optional[str] = Field(
+    space_type: str | None = Field(
         default=None,
         description="Filter by space type ('global' or 'personal')",
         pattern=r"^(global|personal)$",

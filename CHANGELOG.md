@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Entry-point smoke tests** (`tests/test_entrypoint.py`, 8 tests). Before them,
+  coverage reported **0%** for `server.py`, `jira_tools.py`,
+  `confluence_tools.py`, `workflow_tools.py` and `prompts.py` — not thinly
+  covered, never imported. The suite could be fully green while the
+  `mcp-jira-confluence-corp` console script was dead on arrival, which is what
+  `mcp` 2.0 removing `mcp.server.fastmcp` did. The tests walk the path a real
+  client walks: `console_scripts` metadata → `server:main` → `create_server()` →
+  all four `register_*` calls → `mcp.run()` over stdio → clean exit on EOF, plus
+  protocol-level `list_tools()` / `list_prompts()`, a stdout-stays-clean check
+  (stdio owns stdout), a no-configuration-required check, and an assertion that
+  building the server makes no network call. Offline; no PAT, no Atlassian host.
+  Coverage of `server.py` 0% → 71%, total 37% → 50%.
+
+### Fixed
+- **CI could not fail on a failing test suite.** `pytest` ran with
+  `continue-on-error: true`, so a red suite left the job green — the one thing
+  the job exists to prevent. Now blocking.
+- **The `3.9` matrix leg took the whole matrix down.** `requires-python` is
+  `>=3.10` (and `mcp` requires `>=3.10`), so 3.9 failed at `pip install` on
+  every run this repo has ever had; with `fail-fast` at its default the other
+  four legs were cancelled before they ran. Leg removed, `fail-fast: false`
+  added so no single leg can mask the rest again.
+- **`black --check` was blocking while `pytest` was not.** It flags 2 files
+  (`config.py`, `confluence_tools.py`) of pre-existing drift from a newer black,
+  making every run red on cosmetics. Now advisory; re-arm it in the commit that
+  reformats those two files.
+
+### Changed
+- `[tool.ruff]`/`[tool.black]` `target-version` and `[tool.mypy]`
+  `python_version` raised from 3.9 to 3.10, matching `requires-python`.
+  Consequent PEP 604 modernisation (`Optional[X]` → `X | None`) applied across
+  `client.py`, `config.py` and `models.py`.
+
 ## [0.2.2] - 2026-08-10
 
 ### Fixed

@@ -10,8 +10,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      # Without this, one dead leg cancels the whole matrix. That is how the
+      # 3.9 install failure below hid the real status of 3.10–3.13 for every
+      # run this repo has ever had.
+      fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # 3.9 is gone: `requires-python = ">=3.10"`, and the `mcp` SDK itself
+        # requires >=3.10, so that leg could never get past `pip install`
+        # ("Package 'mcp-jira-confluence-corp' requires a different Python:
+        # 3.9.x not in '>=3.10'"). It was not extra coverage — it was a
+        # guaranteed red that took the other four legs down with it.
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,14 +36,24 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Lint with ruff
-        run: ruff check src/
+        run: ruff check src/ tests/
 
-      - name: Format check with black
+      # Advisory, not blocking — the inverse of how this file used to be
+      # weighted. `black --check` currently flags 2 files (config.py,
+      # confluence_tools.py) as pre-existing drift from a newer black, so as a
+      # blocking step it makes every run red regardless of the code under
+      # review, and a permanently-red gate teaches people to ignore CI.
+      # Re-arm it (drop continue-on-error) in the commit that reformats those
+      # two files.
+      - name: Format check with black (advisory)
         run: black --check src/
+        continue-on-error: true
 
+      # Blocking. `continue-on-error: true` used to sit here instead, which
+      # meant a failing test suite could not fail the job — the one thing the
+      # job exists to do. Correctness gates; cosmetics advise.
       - name: Test with pytest
         run: pytest tests/ -v
-        continue-on-error: true
 
   build:
     runs-on: ubuntu-latest
