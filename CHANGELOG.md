@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-29
+
+First release since 0.2.0 on PyPI: the 0.2.1/0.2.2 fixes (including the `mcp<2`
+pin) were tagged but never published, so this ships them together with the
+CI and test work below.
+
 ### Added
 - **Entry-point smoke tests** (`tests/test_entrypoint.py`, 8 tests). Before them,
   coverage reported **0%** for `server.py`, `jira_tools.py`,
@@ -94,7 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Total tool count: 34 (was 32 in v0.1.0).
 - Total prompt count: 6 (was 0 in v0.1.0).
 
-[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...v0.2.2
 [0.2.1]: https://github.com/mshegolev/mcp-jira-confluence-corp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/mshegolev/mcp-jira-confluence-corp/releases/tag/v0.2.0
